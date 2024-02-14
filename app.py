@@ -102,6 +102,11 @@ def optimize():
     
     # Remove a semicolon if it exists at the end of the query
     optimized_query = optimized_query.rstrip(';')
+
+    print("###############################################")
+    print(optimized_query)
+    print("###############################################")
+    
     
     # Execute the optimized query against the Oracle Database
     with conn.cursor() as cur:
