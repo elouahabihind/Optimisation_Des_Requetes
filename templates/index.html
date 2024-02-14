@@ -90,6 +90,10 @@
                 <div class="button-section">
                     <button onclick="optimizeQuery()">Optimiser</button>
                 </div>
+                <div class="button-section">
+                    <button onclick="validateQuery()">Valider</button>
+                </div>
+                
             </div>
             <div class="section output-section">
                 <h2>Requête optimisée :</h2>
@@ -104,6 +108,43 @@
             var optimizedQuery = userQuery;
             document.getElementById('optimized-query').value = optimizedQuery;
         }
+   
+        function validateQuery() {
+            var userQuery = document.getElementById('user-query').value;
+            
+            // Envoi de la requête au serveur Flask pour validation
+            fetch('/valider_requete_sql', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ requete: userQuery })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Vérification de la validité de la requête
+                if (data.valide) {
+                    // Affichage du message de GemAI s'il est disponible
+                    if (data.gemini_result && data.gemini_result.status === 'success') {
+                        alert(data.gemini_result.message);
+                    } else {
+                        // Affichage du message de validation standard
+                        alert(data.gemini_result.message);
+                    }
+                } else {
+                    // Affichage du message d'erreur de validation
+                    alert(data.gemini_result.message);
+                }
+            })
+            .catch(error => {
+                console.error('Erreur lors de la validation de la requête:', error);
+                // Affichage d'un message d'erreur en cas de problème
+                alert('Erreur lors de la validation de la requête. Veuillez réessayer.');
+            });
+        }
+        
+        
     </script>
+    
 </body>
 </html>
