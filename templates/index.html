@@ -82,26 +82,23 @@
     <div class="container">
       <h1>Optimisation Des Requêtes SQL</h1>
 
-      <div class="grid-container">
-        <div class="section input-section">
-          <h2>Entrez votre requête :</h2>
-          <textarea
-            id="user-query"
-            placeholder="Saisissez votre requête ici"
-          ></textarea>
-          <div class="button-section">
-            <button onclick="optimizeQuery()">Optimiser</button>
-          </div>
+        <div class="grid-container">
+            <div class="section input-section">
+                <h2>Entrez votre requête :</h2>
+                <textarea id="user-query" placeholder="Saisissez votre requête ici"></textarea>
+                <div class="button-section">
+                    <button onclick="optimizeQuery()">Optimiser</button>
+                </div>
+                <div class="button-section">
+                    <button onclick="validateQuery()">Valider</button>
+                </div>
+                
+            </div>
+            <div class="section output-section">
+                <h2>Requête optimisée :</h2>
+                <textarea id="optimized-query" placeholder="La requête optimisée s'affichera ici" readonly></textarea>
+            </div>
         </div>
-        <div class="section output-section">
-          <h2>Requête optimisée :</h2>
-          <textarea
-            id="optimized-query"
-            placeholder="La requête optimisée s'affichera ici"
-            readonly
-          ></textarea>
-        </div>
-      </div>
     </div>
     <script>
       function optimizeQuery() {
@@ -128,12 +125,49 @@
       }
     </script>
 
-    <!-- <script>
+    <script>
         function optimizeQuery() {
             var userQuery = document.getElementById('user-query').value;
             var optimizedQuery = userQuery;
             document.getElementById('optimized-query').value = optimizedQuery;
         }
-    </script> -->
-  </body>
+   
+        function validateQuery() {
+            var userQuery = document.getElementById('user-query').value;
+            
+            // Envoi de la requête au serveur Flask pour validation
+            fetch('/valider_requete_sql', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ requete: userQuery })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Vérification de la validité de la requête
+                if (data.valide) {
+                    // Affichage du message de GemAI s'il est disponible
+                    if (data.gemini_result && data.gemini_result.status === 'success') {
+                        alert(data.gemini_result.message);
+                    } else {
+                        // Affichage du message de validation standard
+                        alert(data.gemini_result.message);
+                    }
+                } else {
+                    // Affichage du message d'erreur de validation
+                    alert(data.gemini_result.message);
+                }
+            })
+            .catch(error => {
+                console.error('Erreur lors de la validation de la requête:', error);
+                // Affichage d'un message d'erreur en cas de problème
+                alert('Erreur lors de la validation de la requête. Veuillez réessayer.');
+            });
+        }
+        
+        
+    </script>
+    
+</body>
 </html>
