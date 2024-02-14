@@ -4,6 +4,7 @@ import os
 import re
 from openai import OpenAI
 import google.generativeai as genai
+import oracledb
 
 load_dotenv()
 
@@ -16,22 +17,7 @@ client = OpenAI(
 
 intstructions_string_few_shot = """hello"""
 
-def query_optimisation(original_query):
-    response = client.chat.completions.create(
-        model="ft:gpt-3.5-turbo-0613:personal::8s8nIXrV",
-        messages=[
-        {"role": "system", "content": intstructions_string_few_shot},
-        {"role": "user", "content": original_query}
-        ]
-    )
-    optimised_query = dict(response)['choices'][0].message.content
-    return optimised_query
-
-
-
-@app.route('/')
-def home():
-    return render_template('index.html')
+conn = oracledb.connect(user=os.getenv("ORACLE_USERNAME"), password=os.getenv("ORACLE_PASSWORD"), dsn="34.121.99.220:1521/free")
 
 
 def valider_requete_sql(requete):
@@ -90,6 +76,21 @@ def valider_requete_sql_endpoint():
     
     return jsonify(response), 200
 
+
+
+
+def query_optimisation(original_query):
+    response = client.chat.completions.create(
+        model="ft:gpt-3.5-turbo-0613:personal::8s8nIXrV",
+        messages=[
+        {"role": "system", "content": intstructions_string_few_shot},
+        {"role": "user", "content": original_query}
+        ]
+    )
+    optimised_query = dict(response)['choices'][0].message.content
+    return optimised_query
+
+
 @app.route('/optimize', methods=['POST'])
 def optimize():
     # Get the original query from the POST request
@@ -99,8 +100,24 @@ def optimize():
     # Call the query_optimisation function
     optimized_query = query_optimisation(original_query)
     
-    # Return the optimized query as JSON
-    return jsonify({'optimizedQuery': optimized_query})
+    # Remove a semicolon if it exists at the end of the query
+    optimized_query = optimized_query.rstrip(';')
+    
+    # Execute the optimized query against the Oracle Database
+    with conn.cursor() as cur:
+        cur.execute(optimized_query)
+        optimized_result = cur.fetchall()
+
+    
+    # Return the optimized query and result as JSON
+    response = {'optimizedQuery': optimized_query, 'optimizedResult': optimized_result}
+    return jsonify(response)
+
+
+@app.route('/')
+def home():
+    return render_template('index.html')
+
 
 if __name__ == '__main__':
     app.run(debug=True)
