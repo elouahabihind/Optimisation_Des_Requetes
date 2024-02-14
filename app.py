@@ -1,13 +1,11 @@
 from flask import Flask , render_template, request, jsonify
 from dotenv import load_dotenv
 import os
+import re
 from openai import OpenAI
+import google.generativeai as genai
 
 load_dotenv()
-from flask import Flask, request, jsonify, render_template
-import re
-import os
-import google.generativeai as genai
 
 
 app = Flask(__name__)
@@ -17,7 +15,6 @@ client = OpenAI(
 )
 
 intstructions_string_few_shot = """hello"""
-# intstructions_string_few_shot = """hello everybody this is just a test"""
 
 def query_optimisation(original_query):
     response = client.chat.completions.create(
@@ -35,6 +32,8 @@ def query_optimisation(original_query):
 @app.route('/')
 def home():
     return render_template('index.html')
+
+
 def valider_requete_sql(requete):
     # Vérifier si la requête commence par une des commandes SQL
     commandes_sql = ['insert', 'select', 'delete', 'update']
@@ -89,7 +88,9 @@ def valider_requete_sql_endpoint():
     # Fusionner les résultats de validation et d'analyse
     response = {'valide': valide,'gemini_result': gemini_result}
     
-    return jsonify(response), 200@app.route('/optimize', methods=['POST'])
+    return jsonify(response), 200
+
+@app.route('/optimize', methods=['POST'])
 def optimize():
     # Get the original query from the POST request
     data = request.get_json()
