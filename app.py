@@ -17,7 +17,11 @@ client = OpenAI(
 
 intstructions_string_few_shot = """hello"""
 
-conn = oracledb.connect(user=os.getenv("ORACLE_USERNAME"), password=os.getenv("ORACLE_PASSWORD"), dsn="34.121.99.220:1521/free")
+conn = oracledb.connect(user=os.getenv("ORACLE_USERNAME"), 
+                        password=os.getenv("ORACLE_PASSWORD"), 
+                        # l'adresse IP du serveur Oracle doit etre changer par l'adresse IP de votre serveur
+                        dsn="34.122.221.213:1521/free")
+
 
 
 def valider_requete_sql(requete):
@@ -93,28 +97,23 @@ def query_optimisation(original_query):
 
 @app.route('/optimize', methods=['POST'])
 def optimize():
-    # Get the original query from the POST request
     data = request.get_json()
     original_query = data.get('originalQuery')
 
-    # Call the query_optimisation function
     optimized_query = query_optimisation(original_query)
     
-    # Remove a semicolon if it exists at the end of the query
     optimized_query = optimized_query.rstrip(';')
 
-    print("###############################################")
+    print("#############################################")
     print(optimized_query)
-    print("###############################################")
+    print("#############################################")
     
-    
-    # Execute the optimized query against the Oracle Database
+
     with conn.cursor() as cur:
         cur.execute(optimized_query)
         optimized_result = cur.fetchall()
 
     
-    # Return the optimized query and result as JSON
     response = {'optimizedQuery': optimized_query, 'optimizedResult': optimized_result}
     return jsonify(response)
 
